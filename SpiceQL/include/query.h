@@ -98,10 +98,10 @@ namespace SpiceQL {
 
 
   /**
-   * @brief Returns all kernels available in the time range
+   * @brief Returns all time dependent kernels available in the time range
    *
-   * Returns a structured json object containing all available kernels for a specified time
-   * range along with their dependencies.
+   * Returns a structured json object containing all available ck and spk kernels for a specified time
+   * range along with the associated spacecraft clock kernel.
    *
    * TODO: Add a "See Also" on json format after the format matures a bit more.
    *
@@ -111,8 +111,7 @@ namespace SpiceQL {
    *                     is in any of the times inputed get returned
    * @returns json object with new kernels
   **/
-  nlohmann::json searchMissionKernels(nlohmann::json kernels, std::vector<double> times, bool isContiguous=false);
-
+  nlohmann::json searchEphemerisKernels(nlohmann::json kernels, std::vector<double> times, bool isContiguous = false);
 
   /**
     * @brief acquire all kernels of a type according to a configuration JSON object
@@ -149,5 +148,11 @@ namespace SpiceQL {
    * @param kernels json object with kernel query results
    * @return set<string> set of kernels
    */
-  std::set<std::string> getKernelsAsSet(nlohmann::json kernels); 
+  std::set<std::string> getKernelsAsSet(nlohmann::json kernels);
+
+  nlohmann::json searchAndRefineKernels(std::string mission,
+                                        std::vector<double> times = {},
+                                        std::string ckQuality = "reconstructed",
+                                        std::string spkQuality = "reconstructed",
+                                        std::vector<std::string> kernels = {"ck", "spk", "sclk", "ik", "iak", "fk", "tspk", "pck", "lsk"});
   }

@@ -375,7 +375,7 @@ TEST(PluralSuit, UnitTestGetTargetStates) {
   nlohmann::json searchMissionKernelsJson;
   searchMissionKernelsJson["ck"]["reconstructed"]["kernels"] = {{"/Path/to/some/ck.bc"}};
   searchMissionKernelsJson["spk"]["reconstructed"]["kernels"] = {{"/Path/to/some/spk.bsp"}};
-  mocks.OnCallFunc(SpiceQL::searchMissionKernels).Return(searchMissionKernelsJson);
+  mocks.OnCallFunc(SpiceQL::searchEphemerisKernels).Return(searchMissionKernelsJson);
 
   vector<double> state = {0, 0, 0, 0, 0, 0, 0};
   mocks.OnCallFunc(getTargetState).Return(state);
@@ -424,7 +424,7 @@ TEST(PluralSuit, UnitTestGetTargetOrientations) {
   nlohmann::json searchMissionKernelsJson;
   searchMissionKernelsJson["ck"]["reconstructed"]["kernels"] = {{"/Path/to/some/ck.bc"}};
   searchMissionKernelsJson["spk"]["reconstructed"]["kernels"] = {{"/Path/to/some/spk.bsp"}};
-  mocks.OnCallFunc(SpiceQL::searchMissionKernels).Return(searchMissionKernelsJson);
+  mocks.OnCallFunc(SpiceQL::searchEphemerisKernels).Return(searchMissionKernelsJson);
 
   vector<double> orientation = {0, 0, 0, 0, 0, 0, 0};
   mocks.OnCallFunc(getTargetOrientation).Return(orientation);

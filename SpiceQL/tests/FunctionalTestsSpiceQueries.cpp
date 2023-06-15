@@ -19,7 +19,7 @@ TEST_F(LroKernelSet, FunctionalTestSearchMissionKernels) {
   nlohmann::json kernels = listMissionKernels(root, conf);
 
   // do a time query
-  kernels = searchMissionKernels(kernels, {110000000, 120000001}, false);
+  kernels = searchEphemerisKernels(kernels, {110000000, 120000001}, false);
   kernels = getLatestKernels(kernels);
   
   ASSERT_EQ(kernels["moc"]["spk"]["smithed"]["kernels"].size(), 2);

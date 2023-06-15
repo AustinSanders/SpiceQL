@@ -21,6 +21,11 @@ services:
         target: /mnt/isis_data
         volume:
           nocopy: true
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
 
 volumes:
   isisdata:

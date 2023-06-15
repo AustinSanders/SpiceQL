@@ -81,7 +81,7 @@ TEST_F(LroKernelSet, UnitTestStackedKernelSetConstructorDestructor) {
   SPDLOG_DEBUG("results from listMissionKernels, {}", kernels.dump());
 
   // do a time query
-  kernels = searchMissionKernels(kernels, {110000000, 120000001}, false);
+  kernels = searchEphemerisKernels(kernels, {110000000, 120000001}, false);
   SPDLOG_DEBUG("Kernels after search: {} ", kernels.dump());
   // get only latest versions
   kernels = getLatestKernels(kernels);
@@ -137,7 +137,7 @@ TEST_F(LroKernelSet, UnitTestStackedKernelPoolGetLoadedKernels) {
   nlohmann::json kernels = listMissionKernels(root, conf);
 
   // do a time query
-  kernels = searchMissionKernels(kernels, {110000000, 120000001}, false);
+  kernels = searchEphemerisKernels(kernels, {110000000, 120000001}, false);
   kernels = getLatestKernels(kernels);
 
   KernelSet k(kernels);
