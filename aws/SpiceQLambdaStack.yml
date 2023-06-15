@@ -225,7 +225,7 @@ Resources:
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
       FunctionName: getTargetStateslambda
       PackageType: Image
-      MemorySize: 1024
+      MemorySize: 2000
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
           LocalMountPath: '/mnt/isis_data'
@@ -260,7 +260,7 @@ Resources:
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
       FunctionName: getTargetOrientationslambda
       PackageType: Image
-      MemorySize: 1024
+      MemorySize: 2000
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
           LocalMountPath: '/mnt/isis_data'
@@ -295,7 +295,7 @@ Resources:
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
       FunctionName: frameTracelambda
       PackageType: Image
-      MemorySize: 1024
+      MemorySize: 2000
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
           LocalMountPath: '/mnt/isis_data'

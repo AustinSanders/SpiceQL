@@ -194,6 +194,7 @@ namespace SpiceQL {
     return lt_starg;
   }
 
+
   vector<vector<double>> getTargetStates(vector<double> ets, string target, string observer, string frame, string abcorr, string mission, string ckQuality, string spkQuality, bool searchKernels) {
     SPDLOG_TRACE("Calling getTargetStates with {}, {}, {}, {}, {}, {}, {}, {}, {}", ets.size(), target, observer, frame, abcorr, mission, ckQuality, spkQuality, searchKernels);
     
@@ -202,56 +203,12 @@ namespace SpiceQL {
     }
 
     json ephemKernels = {};
-    json baseJson = {};
 
     if (searchKernels) {
-      try {
-        Kernel::translateQuality(ckQuality);
-      }
-      catch (invalid_argument &e) {
-        SPDLOG_WARN("{} not a valid kernel quality, setting ckQuality to RECONSTRUCTED", ckQuality);
-        ckQuality = "reconstructed";
-      }
-
-      try {
-        Kernel::translateQuality(spkQuality);
-      }
-      catch (invalid_argument &e) {
-        SPDLOG_WARN("{} not a valid kernel quality, setting spkQuality to RECONSTRUCTED", spkQuality);
-        spkQuality = "reconstructed";
-      }
-
-      Config config;
-      json missionJson;
-      if (config.contains(mission)) {
-        SPDLOG_TRACE("Found {} in config, getting only {} kernels.", mission, mission);
-        missionJson = config.get(mission);
-      }
-      else {
-        throw invalid_argument("Couldn't find " + mission + " in config explicitly, please request a mission from the config [" + getMissionKeys(config.globalConf()) + "]");
-      }
-      SPDLOG_TRACE("GOT MISSION CONFIG: {}", missionJson.dump());
-
-      baseJson = config.get("base");
-      baseJson = getLatestKernels(baseJson);
-
-      auto start = high_resolution_clock::now();
-      missionJson["sclk"] = getLatestKernels(missionJson["sclk"]);
-      json refinedCksAndSpks = searchMissionKernels(missionJson, {ets.front(), ets.back()}, true);
-      auto stop = high_resolution_clock::now();
-      auto duration = duration_cast<microseconds>(stop - start);
-
-      SPDLOG_DEBUG("Time in microseconds to get filtered kernel list: {}", duration.count());
-
-      ephemKernels["ck"]["kernels"] = refinedCksAndSpks["ck"][ckQuality]["kernels"];
-      ephemKernels["spk"]["kernels"] = refinedCksAndSpks["spk"][spkQuality]["kernels"];
-      ephemKernels["pck"] = getLatestKernels(missionJson["pck"]);
-      ephemKernels["tspk"] = getLatestKernels(missionJson["tspk"]);
-      SPDLOG_TRACE("Kernels being furnished: {}", ephemKernels.dump());
-    }                  
+      ephemKernels = searchAndRefineKernels(mission, {ets.front(), ets.back()}, ckQuality, spkQuality, {"sclk", "ck", "spk", "pck", "tspk"});
+    }
 
     auto start = high_resolution_clock::now();
-    KernelSet baseSet(baseJson);
     KernelSet ephemSet(ephemKernels);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
@@ -272,6 +229,157 @@ namespace SpiceQL {
     return lt_stargs;
   }
 
+
+  vector<double> extractExactCkTimes(double observStart, double observEnd, int targetFrame, string mission, string ckQuality, bool searchKernels) {
+    SPDLOG_TRACE("Calling extractExactCkTimes with {}, {}, {}, {}, {}, {}", observStart, observEnd, targetFrame, mission, ckQuality, searchKernels);
+    Config config;
+    json missionJson;
+
+    json ephemKernels = {};
+
+    if (searchKernels) {
+      ephemKernels = searchAndRefineKernels(mission, {observStart, observEnd}, ckQuality, "na", {"ck", "sclk"});
+    }
+
+    KernelSet ephemSet(ephemKernels);
+
+    int count = 0;
+
+    //  Next line added 12-03-2009 to allow observations to cross segment boundaries
+    double currentTime = observStart;
+    bool timeLoaded = false;
+
+    // Get number of ck loaded for this rotation.  This method assumes only one SpiceRotation
+    // object is loaded.
+    checkNaifErrors();
+    ktotal_c("ck", (SpiceInt *)&count);
+
+    if (count > 1) {
+      std::string msg = "Unable to get exact CK record times when more than 1 CK is loaded, Aborting";
+      throw std::runtime_error(msg);
+    }
+    else if (count < 1) {
+      std::string msg = "No CK kernels loaded, Aborting";
+      throw std::runtime_error(msg);
+    }
+
+    // case of a single ck -- read instances and data straight from kernel for given time range
+    SpiceInt handle;
+
+    // Define some Naif constants
+    int FILESIZ = 128;
+    int TYPESIZ = 32;
+    int SOURCESIZ = 128;
+    //      double DIRSIZ = 100;
+
+    SpiceChar file[FILESIZ];
+    SpiceChar filtyp[TYPESIZ]; // kernel type (ck, ek, etc.)
+    SpiceChar source[SOURCESIZ];
+
+    SpiceBoolean found;
+    bool observationSpansToNextSegment = false;
+
+    double segStartEt;
+    double segStopEt;
+
+    kdata_c(0, "ck", FILESIZ, TYPESIZ, SOURCESIZ, file, filtyp, source, &handle, &found);
+    dafbfs_c(handle);
+    daffna_c(&found);
+    int spCode = ((int)(targetFrame / 1000)) * 1000;
+    std::vector<double> cacheTimes = {};
+
+    while (found) {
+      observationSpansToNextSegment = false;
+      double sum[10]; // daf segment summary
+      double dc[2];   // segment starting and ending times in tics
+      SpiceInt ic[6]; // segment summary values:
+      // instrument code for platform,
+      // reference frame code,
+      // data type,
+      // velocity flag,
+      // offset to quat 1,
+      // offset to end.
+      dafgs_c(sum);
+      dafus_c(sum, (SpiceInt)2, (SpiceInt)6, dc, ic);
+
+      // Don't read type 5 ck here
+      if (ic[2] == 5)
+        break;
+
+      // Check times for type 3 ck segment if spacecraft matches
+      if (ic[0] == spCode && ic[2] == 3) {
+        sct2e_c((int)spCode / 1000, dc[0], &segStartEt);
+        sct2e_c((int)spCode / 1000, dc[1], &segStopEt);
+        checkNaifErrors();
+        double et;
+
+        // Get times for this segment
+        if (currentTime >= segStartEt && currentTime <= segStopEt) {
+
+          // Check for a gap in the time coverage by making sure the time span of the observation
+          //  does not cross a segment unless the next segment starts where the current one ends
+          if (observationSpansToNextSegment && currentTime > segStartEt) {
+            std::string msg = "Observation crosses segment boundary--unable to interpolate pointing";
+            throw std::runtime_error(msg);
+          }
+          if (observEnd > segStopEt) {
+            observationSpansToNextSegment = true;
+          }
+
+          // Extract necessary header parameters
+          int dovelocity = ic[3];
+          int end = ic[5];
+          double val[2];
+          dafgda_c(handle, end - 1, end, val);
+          //            int nints = (int) val[0];
+          int ninstances = (int)val[1];
+          int numvel = dovelocity * 3;
+          int quatnoff = ic[4] + (4 + numvel) * ninstances - 1;
+          //            int nrdir = (int) (( ninstances - 1 ) / DIRSIZ); /* sclkdp directory records */
+          int sclkdp1off = quatnoff + 1;
+          int sclkdpnoff = sclkdp1off + ninstances - 1;
+          //            int start1off = sclkdpnoff + nrdir + 1;
+          //            int startnoff = start1off + nints - 1;
+          int sclkSpCode = spCode / 1000;
+
+          // Now get the times
+          std::vector<double> sclkdp(ninstances);
+          dafgda_c(handle, sclkdp1off, sclkdpnoff, (SpiceDouble *)&sclkdp[0]);
+
+          int instance = 0;
+          sct2e_c(sclkSpCode, sclkdp[0], &et);
+
+          while (instance < (ninstances - 1) && et < currentTime) {
+            instance++;
+            sct2e_c(sclkSpCode, sclkdp[instance], &et);
+          }
+
+          if (instance > 0)
+            instance--;
+          sct2e_c(sclkSpCode, sclkdp[instance], &et);
+
+          while (instance < (ninstances - 1) && et < observEnd) {
+            cacheTimes.push_back(et);
+            instance++;
+            sct2e_c(sclkSpCode, sclkdp[instance], &et);
+          }
+          cacheTimes.push_back(et);
+
+          if (!observationSpansToNextSegment) {
+            timeLoaded = true;
+            break;
+          }
+          else {
+            currentTime = segStopEt;
+          }
+        }
+      }
+      dafcs_c(handle);  // Continue search in daf last searched
+      daffna_c(&found); // Find next forward array in current daf
+    }
+
+    return cacheTimes;
+  }
 
   vector<double> getTargetOrientation(double et, int toFrame, int refFrame) {
     // Much of this function is from ISIS SpiceRotation.cpp
@@ -335,46 +443,12 @@ namespace SpiceQL {
     }
 
     json ephemKernels = {};
-    json baseJson = {};
 
     if (searchKernels) {
-      try {
-        Kernel::translateQuality(ckQuality);
-      }
-      catch (invalid_argument &e) {
-        SPDLOG_WARN("{} not a valid kernel quality, setting ckQuality to RECONSTRUCTED", ckQuality);
-        ckQuality = "reconstructed";
-      }
-
-      if (config.contains(mission)) {
-        SPDLOG_TRACE("Found {} in config, getting only {} kernels.", mission, mission);
-        missionJson = config.get(mission);
-      }
-      else {
-        throw invalid_argument("Couldn't find " + mission + " in config explicitly, please request a mission from the config [" + getMissionKeys(config.globalConf()) + "]");
-      }
-      
-      baseJson = config.get("base");
-      baseJson = getLatestKernels(baseJson);
-
-      auto start = high_resolution_clock::now();
-      missionJson["sclk"] = getLatestKernels(missionJson["sclk"]);
-      json refinedCksAndSpks = searchMissionKernels(missionJson, {ets.front(), ets.back()}, true);
-      auto stop = high_resolution_clock::now();
-      auto duration = duration_cast<microseconds>(stop - start);
-      SPDLOG_DEBUG("Time in microseconds to get filtered kernel sets: {}", duration.count());
-
-      ephemKernels["ck"]["kernels"] = refinedCksAndSpks["ck"][ckQuality]["kernels"];
-      ephemKernels["sclk"] = missionJson["sclk"];
-      ephemKernels["pck"] = getLatestKernels(missionJson["pck"]);
-      ephemKernels["fk"] = getLatestKernels(missionJson["fk"]);
-      ephemKernels["tspk"] = getLatestKernels(missionJson["tspk"]);
-
-      SPDLOG_TRACE("Kernels being furnish: {}", ephemKernels.dump());
+      ephemKernels = searchAndRefineKernels(mission, {ets.front(), ets.back()}, ckQuality, "na", {"sclk", "ck", "pck", "fk", "tspk"});
     }
 
     auto start = high_resolution_clock::now();
-    KernelSet baseSet(baseJson);
     KernelSet ephemSet(ephemKernels);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
@@ -402,32 +476,7 @@ namespace SpiceQL {
     json ephemKernels;
 
     if (searchKernels) {
-      try {
-        Kernel::translateQuality(ckQuality);
-      }
-      catch (invalid_argument &e) {
-        SPDLOG_WARN("{} not a valid kernel quality, setting ckQuality to RECONSTRUCTED", ckQuality);
-        ckQuality = "reconstructed";
-      }
-
-      if (config.contains(mission)) {
-        SPDLOG_TRACE("Found {} in config, getting only {} kernels.", mission, mission);
-        missionJson = config.get(mission);
-      }
-      else {
-        throw invalid_argument("Couldn't find " + mission + " in config explicitly, please request a mission from the config [" + getMissionKeys(config.globalConf()) + "]");
-      }
-
-      // If nadir is enabled we can probably load a smaller set of kernels?
-      missionJson["sclk"] = getLatestKernels(missionJson["sclk"]);
-      json refinedCksAndSpks = searchMissionKernels(missionJson, {et}, true);
-
-      ephemKernels["ck"]["kernels"] = refinedCksAndSpks["ck"][ckQuality]["kernels"];
-      ephemKernels["sclk"] = missionJson["sclk"];
-      ephemKernels["pck"] = getLatestKernels(missionJson["pck"]);
-      ephemKernels["fk"] = getLatestKernels(missionJson["fk"]);
-      ephemKernels["tspk"] = getLatestKernels(missionJson["tspk"]);
-      SPDLOG_TRACE("Kernels being furnish: {}", ephemKernels.dump());
+      ephemKernels = searchAndRefineKernels(mission, {et}, ckQuality, "na", {"sclk", "ck", "pck", "fk", "tspk"});
     }
 
     KernelSet ephemSet(ephemKernels);

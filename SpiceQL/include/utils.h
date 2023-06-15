@@ -200,9 +200,23 @@ namespace SpiceQL {
                                                    bool searchKernels=true);
 
   /**
+   * @brief Extracts all segment times between observStart and observeEnd
+   *
+   * Givven an observation start and observation end, extract all times assocaited
+   * with segments in a CK file. The times returned are all times assocaited with
+   * concrete CK segment times with no interpolation.
+   *
+   * @param observStart Ephemeris time to start searching at
+   * @param observEnd Ephemeris time to stop searching at
+   * @param targetFrame Target reference frame to get ephemeris data in
+   * @returns A list of times
+   **/
+  std::vector<double> extractExactCkTimes(double observStart, double observEnd, int targetFrame, std::string mission, std::string ckQuality, bool searchKernels);
+
+  /**
    * @brief Gives quaternion and angular velocity for a given frame at a given ephemeris time
    *
-   * Orientations for an input frame in some reference frame.
+   * Gets an orientation for an input frame in some reference frame.
    * The orientations returned from this function can be used to transform a position
    * in the source frame to the ref frame.
    *
@@ -216,7 +230,7 @@ namespace SpiceQL {
   /**
    * @brief Gives quaternion and angular velocity for a given frame at a set of ephemeris times
    *
-   * Orientations for an input frame in some reference frame.
+   * Gets orientations for an input frame in some reference frame.
    * The orientations returned from this function can be used to transform a position
    * in the source frame to the ref frame.
    *
