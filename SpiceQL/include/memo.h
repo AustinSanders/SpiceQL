@@ -120,11 +120,11 @@ namespace Memo {
         
             std::string  cache_dir; 
         
-            if (cache_dir_char == NULL) { 
+            if (cache_dir_char == NULL) {
                 std::string  tempname = "spiceql-cache-" + gen_random(10);
                 cache_dir = fs::temp_directory_path() / tempname / "spiceql_cache"; 
             }
-            else { 
+            else {
                 cache_dir = cache_dir_char;
             }
 
@@ -135,13 +135,14 @@ namespace Memo {
         
             CACHE_DIRECTORY = cache_dir;
             SPDLOG_DEBUG("Setting cache directory to: {}", CACHE_DIRECTORY);  
-        }
+        } 
         else { 
             SPDLOG_TRACE("Cache Directory Already Set: {}", CACHE_DIRECTORY);  
         }
 
         return CACHE_DIRECTORY;
     }
+
 
     inline sw::redis::RedisCluster* getRedisConnection() { 
         static std::string REDIS_URI = "";

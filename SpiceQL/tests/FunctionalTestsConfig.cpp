@@ -172,7 +172,6 @@ TEST_F(TestConfig, FunctionalTestsConfigGet) {
   mocks.OnCallFunc(Memo::ls).Return(paths);
 
   json resJson = testConfig.get("lroc");
-  cout << resJson.dump() << endl;
   EXPECT_EQ(resJson.size(), 8);
   for (auto pointer : expectedPointers) {
     ASSERT_TRUE(resJson.contains(json::json_pointer(pointer)));
@@ -248,3 +247,4 @@ TEST_F(TestConfig, FunctionalTestsConfigGetParentPointerDeps) {
   EXPECT_EQ(parent, "/lroc/sclk");
   ASSERT_TRUE(fs::remove(folder));
 }
+

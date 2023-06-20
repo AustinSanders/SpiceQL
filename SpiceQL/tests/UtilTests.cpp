@@ -256,7 +256,7 @@ TEST(UtilTests, getRootDependency) {
       "deps" : ["/mission_1"]
     }
   })"_json;
-
+  
   std::string rootPointer = getRootDependency(baseConfig, "/instrument");
   ASSERT_TRUE(fs::remove(folder));
   EXPECT_EQ(rootPointer, "/mission_2");
@@ -383,7 +383,7 @@ TEST(PluralSuit, UnitTestGetTargetStates) {
   mocks.OnCallFunc(furnsh_c);
 
   vector<double> ets = {110000000};
-  vector<vector<double>> resStates = getTargetStates(ets, "LRO", "LRO", "J2000", "NONE", "lroc");
+  vector<vector<double>> resStates = getTargetStates(ets, "LRO", "LRO", "J2000", "NONE", "lro");
 
   EXPECT_EQ(resStates.size(), 1);
   ASSERT_EQ(resStates.at(0).size(), 7);
@@ -414,6 +414,7 @@ TEST_F(LroKernelSet, UnitTestGetTargetState) {
   EXPECT_NEAR(resStates[6], 0.0, 1e-14);
 }
 
+
 TEST(PluralSuit, UnitTestGetTargetOrientations) {
   MockRepository mocks;
 
@@ -432,7 +433,7 @@ TEST(PluralSuit, UnitTestGetTargetOrientations) {
   mocks.OnCallFunc(furnsh_c);
 
   vector<double> ets = {110000000};
-  vector<vector<double>> resOrientations = getTargetOrientations(ets, 1, -85620, "lroc");
+  vector<vector<double>> resOrientations = getTargetOrientations(ets, 1, -85620, "lro");
 
   EXPECT_EQ(resOrientations.size(), 1);
   ASSERT_EQ(resOrientations.at(0).size(), 7);
@@ -444,6 +445,7 @@ TEST(PluralSuit, UnitTestGetTargetOrientations) {
   EXPECT_DOUBLE_EQ(resOrientations.at(0)[5], 0.0);
   EXPECT_DOUBLE_EQ(resOrientations.at(0)[6], 0.0);
 }
+
 
 TEST_F(LroKernelSet, UnitTestGetTargetOrientation) {
   nlohmann::json testKernelJson;

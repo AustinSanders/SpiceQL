@@ -111,7 +111,8 @@ namespace SpiceQL {
    *                     is in any of the times inputed get returned
    * @returns json object with new kernels
   **/
-  nlohmann::json searchEphemerisKernels(nlohmann::json kernels, std::vector<double> times, bool isContiguous = false);
+  nlohmann::json searchEphemerisKernels(nlohmann::json kernels, std::vector<double> times, bool isContiguous = false, nlohmann::json cachedTimes = {});
+
 
   /**
     * @brief acquire all kernels of a type according to a configuration JSON object
