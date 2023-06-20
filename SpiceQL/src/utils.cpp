@@ -759,7 +759,7 @@ namespace SpiceQL {
 
     if (arr.is_array()) {
       for(auto &subarr : arr) {
-        if (subarr.empty()) {
+        if (subarr.empty() || subarr.is_null()) {
           continue; 
         }
         
@@ -785,6 +785,40 @@ namespace SpiceQL {
       vector<string> subres; 
       subres.emplace_back(arr);
       res.emplace_back(subres);
+    }
+    else {
+      throw invalid_argument("Input json is not a valid 2D Json array: " + arr.dump());
+    }
+
+    return res;
+  }
+
+
+  vector<pair<double, double>> json2DArrayToDoublePair(json arr) {
+    vector<pair<double, double>> res;
+
+    if (arr.is_array()) {
+      for(auto &subarr : arr) {
+        if (subarr.is_null() || subarr.empty()) {
+          continue; 
+        }
+        
+        pair<double, double> subres; 
+
+        if (!subarr.is_array()) { 
+          throw invalid_argument("Input json is not a valid 2D Json array: " + arr.dump());
+        }
+        if (subarr.size() != 2) { 
+          throw invalid_argument("Input json is not a valid Nx2 Json array: " + arr.dump());
+        }
+        if (!(subarr[0].is_number() && subarr[0].is_number())) { 
+          throw invalid_argument("Input json is not a valid Nx2 Json array of doubles: " + arr.dump());
+        }
+
+        subres.first = subarr[0].get<double>();
+        subres.second = subarr[1].get<double>();
+        res.push_back(subres);
+      }
     }
     else {
       throw invalid_argument("Input json is not a valid 2D Json array: " + arr.dump());
@@ -886,14 +920,14 @@ namespace SpiceQL {
     string currFile = fileType;
 
     //create a spice cell capable of containing all the objects in the kernel.
-    SPICEINT_CELL(currCell, 1000);
+    SPICEINT_CELL(currCell, 100);
 
     //this resizing is done because otherwise a spice cell will append new data
     //to the last "currCell"
     ssize_c(0, &currCell);
-    ssize_c(1000, &currCell);
+    ssize_c(100, &currCell);
 
-    SPICEDOUBLE_CELL(cover, 200000);
+    SPICEDOUBLE_CELL(cover, 100);
 
     if (currFile == "SPK") {
       spkobj_c(kpath.c_str(), &currCell);
@@ -920,17 +954,17 @@ namespace SpiceQL {
         vector<pair<double, double>> times;
         //find the correct coverage window
         if(currFile == "SPK") {
-          SPICEDOUBLE_CELL(cover, 200000);
+          SPICEDOUBLE_CELL(cover, 1000);
           ssize_c(0, &cover);
-          ssize_c(200000, &cover);
+          ssize_c(1000, &cover);
           spkcov_c(kpath.c_str(), body, &cover);
           times = formatIntervals(cover);
         }
         else if(currFile == "CK") {
           //  200,000 is the max coverage window size for a CK kernel
-          SPICEDOUBLE_CELL(cover, 200000);
+          SPICEDOUBLE_CELL(cover, 1000);
           ssize_c(0, &cover);
-          ssize_c(200000, &cover);
+          ssize_c(1000, &cover);
 
           // A SPICE SEGMENT is composed of SPICE INTERVALS
           ckcov_c(kpath.c_str(), body, SPICEFALSE, "SEGMENT", 0.0, "TDB", &cover);
@@ -941,23 +975,61 @@ namespace SpiceQL {
 
         result.reserve(result.size() + distance(times.begin(), times.end()));
         result.insert(result.end(), times.begin(), times.end());
+
       }
     }
-
     return result;
   }
 
 
+  string globTimeIntervals(string mission) { 
+    SPDLOG_TRACE("In globTimeIntervals.");
+    Config conf(getMissionConfigFile(mission));
+    json new_json = {};
+    json sclk_json = conf.getLatestRecursive("sclk");
+    KernelSet sclks(sclk_json);
+
+    // Get CK Times
+    json ckJson = conf.getRecursive("ck");
+
+    vector<json::json_pointer> ckKernelGrps = findKeyInJson(ckJson, "kernels");
+    for(auto &ckKernelGrp : ckKernelGrps) { 
+      vector<vector<string>> kernelList = json2DArrayTo2DVector(ckJson[ckKernelGrp]);
+      for(auto &subList : kernelList) { 
+        for (auto & kernel : subList) {
+          vector<pair<double, double>> timeIntervals = getTimeIntervals(kernel);
+          new_json[kernel] = timeIntervals;
+        }
+      }
+    }
+    
+    // get SPK times
+    json spkJson = conf.getRecursive("spk");
+    vector<json::json_pointer> spkKernelGrps = findKeyInJson(spkJson, "kernels");
+    for(auto &spkKernelGrp : spkKernelGrps) { 
+      vector<vector<string>> kernelList = json2DArrayTo2DVector(spkJson[spkKernelGrp]);
+      for(auto &subList : kernelList) { 
+        for (auto & kernel : subList) {
+          vector<pair<double, double>> timeIntervals = getTimeIntervals(kernel);
+          new_json[kernel] = timeIntervals;
+        }
+      }
+    } 
+    return new_json.dump();
+  }
+
+
+
   string getDataDirectory() {
-      char* ptr = getenv("ISISDATA");
-      fs::path isisDataDir = ptr == NULL ? "" : ptr;
+      char* isisdata_ptr = getenv("ISISDATA");
+      fs::path isisDataDir = isisdata_ptr == NULL ? "" : isisdata_ptr;
 
-      ptr = getenv("ALESPICEROOT");
-      fs::path aleDataDir = ptr == NULL ? "" : ptr;
-
-      ptr = getenv("SPICEROOT");
-      fs::path spiceDataDir = ptr == NULL ? "" : ptr;
-
+      char* alespice_ptr = getenv("ALESPICEROOT");
+      fs::path aleDataDir = alespice_ptr == NULL ? "" : alespice_ptr;
+      
+      char* spiceroot_ptr = getenv("SPICEROOT");
+      fs::path spiceDataDir = spiceroot_ptr == NULL ? "" : spiceroot_ptr;
+ 
       if (fs::is_directory(spiceDataDir)) {
          return spiceDataDir;
       }
@@ -969,7 +1041,6 @@ namespace SpiceQL {
       if (fs::is_directory(isisDataDir)) {
         return isisDataDir;
       }
-
       throw runtime_error(fmt::format("Please set env var SPICEROOT, ISISDATA or ALESPICEROOT in order to proceed."));
   }
 
@@ -1116,7 +1187,7 @@ namespace SpiceQL {
     json::json_pointer depPointer(pointer);
     depPointer /= "deps";
     json deps = config[depPointer];
-
+    
     for (auto path: deps) {
       fs::path fsDataPath(getDataDirectory() + (string)path);
       if (fs::exists(fsDataPath)) {

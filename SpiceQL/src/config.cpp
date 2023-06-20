@@ -108,6 +108,7 @@ namespace SpiceQL {
 
     json::json_pointer parentPointer;
     string dataPath = getDataDirectory();
+    SPDLOG_DEBUG("Data Directory: {}", dataPath);
 
     json eval_json(copyConfig);
     resolveConfigDependencies(eval_json, config);
@@ -141,7 +142,6 @@ namespace SpiceQL {
 
     return copyConfig;
   }
-
 
   unsigned int Config::size() {
     json::json_pointer cpointer(confPointer);

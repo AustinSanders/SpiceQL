@@ -50,7 +50,6 @@ TEST(UtilTests, testGetKernelTimes) {
   fs::path ck_path = temp_dir / "testck.bsp";
   
   fs::path path = static_cast<fs::path>(getenv("SPICEROOT")) / "test_ck.bsp";
-
   fs::path lskPath = fs::path("data") / "naif0012.tls"; 
   fs::path sclkPath = fs::path("data") / "lro_clkcor_2020184_v00.tsc";
 

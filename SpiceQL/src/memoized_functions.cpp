@@ -4,6 +4,7 @@
 
 #include "spice_types.h"
 
+using json = nlohmann::json;
 using namespace std;
 
 namespace SpiceQL {
@@ -12,6 +13,14 @@ namespace SpiceQL {
     Cache c({kpath});
     static auto func_memoed = make_memoized(c, "spiceql_getTimeIntervals", SpiceQL::getTimeIntervals);
     return func_memoed(kpath); 
+  }
+
+
+  string Memo::globTimeIntervals(string mission) { 
+    Cache c({fs::path(getDataDirectory()) / mission});
+    SPDLOG_TRACE("Calling globTimeIntervals via cache");
+    static auto func_memoed = make_memoized(c, "spiceql_getTimeIntervals", SpiceQL::globTimeIntervals);
+    return func_memoed(mission);
   }
 
 

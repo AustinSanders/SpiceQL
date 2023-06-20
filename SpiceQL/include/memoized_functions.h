@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#include <nlohmann/json.hpp>
+
 #include "utils.h"
 
 namespace SpiceQL {
@@ -21,7 +23,7 @@ namespace SpiceQL {
       *
       * @returns list of paths
     **/
-    std::vector<std::string> ls(std::string const & root, bool recursive);
+  std::vector<std::string> ls(std::string const & root, bool recursive);
 
   
   /**
@@ -35,9 +37,17 @@ namespace SpiceQL {
     * @param kpath Path to the kernel
     * @returns std::vector of start and stop times
    **/
-    std::vector<std::pair<double, double>> getTimeIntervals(std::string kpath);
+  std::vector<std::pair<double, double>> getTimeIntervals(std::string kpath);
 
 
+  /**
+   * @brief Get start and stop times for all kernels
+   * 
+   * @return string json map of kernel names to list of time segments
+   */
+  std::string globTimeIntervals(std::string mission);
+  
+  
   /**
     * @brief Memoized wrapper for translateNameToCode
     * 

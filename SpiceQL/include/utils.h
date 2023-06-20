@@ -131,6 +131,14 @@ namespace SpiceQL {
 
 
   /**
+   * @brief Get start and stop times for all kernels
+   * 
+   * @return string json map of kernel names to list of time segments
+   */
+  std::string globTimeIntervals(std::string mission);
+
+
+  /**
    * @brief Gives the position and velocity for a given frame at some ephemeris time
    *
    * Mostly a C++ wrap for NAIF's spkezr_c
@@ -439,6 +447,19 @@ namespace SpiceQL {
     * @returns string vector containing arr data
    **/
    std::vector<std::vector<std::string>> json2DArrayTo2DVector(nlohmann::json arr);
+
+  /**
+    * @brief Returns std::vector<std::vector<string>> interpretation of a json array.
+    *
+    * Attempts to convert the json array to a C++ array.
+    * Throws exception if the json obj is not an Nx2 array of doubles.
+    *
+    * @param arr input json arr
+    *
+    * @returns pair vector containing arr data
+   **/
+   std::vector<std::pair<double, double>> json2DArrayToDoublePair(nlohmann::json arr);
+
 
   /**
     * @brief Returns std::vector<string> interpretation of a json array.

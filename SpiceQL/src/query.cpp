@@ -209,9 +209,8 @@ namespace SpiceQL {
   }
 
 
-  json searchEphemerisKernels(json kernels, std::vector<double> times, bool isContiguous)  {
+  json searchEphemerisKernels(json kernels, std::vector<double> times, bool isContiguous, json cachedTimes)  {
     json reducedKernels;
-    SPDLOG_TRACE("In searchEphemerisKernels");
 
     // Load any SCLKs in the config
     vector<KernelSet> sclkKernels;
@@ -231,12 +230,12 @@ namespace SpiceQL {
     // refine cks for every instrument/category
     for (auto &p : pointers) {
       json cks = kernels[p];
-      SPDLOG_TRACE("In searchEphemerisKernels: searching for {}", cks.dump());
+      SPDLOG_TRACE("In searchEphemerisKernels: searching in {}", cks.dump());
 
       if(cks.is_null() ) {
         continue;
       }
-
+      
       for(auto qual: Kernel::QUALITIES) {
         if(!cks.contains(qual)) {
           continue;
@@ -248,8 +247,16 @@ namespace SpiceQL {
         for(auto &subArr : ckQual) {
           for (auto &kernel : subArr) {
             json newKernelsSubArr = json::array();
+            vector<pair<double, double>> intervals;
+            if(cachedTimes.empty()) {
+              SPDLOG_TRACE("Getting times");
+              intervals = Memo::getTimeIntervals(kernel);
+            } else { 
+              SPDLOG_TRACE("Using cached times");
+              json arr = cachedTimes[kernel.get<string>()];
+              intervals = json2DArrayToDoublePair(arr);
+            }
 
-            vector<pair<double, double>> intervals = Memo::getTimeIntervals(kernel);
             for(auto &interval : intervals) {
               auto isInRange = [&interval](double d) -> bool {return d >= interval.first && d <= interval.second;};
 
@@ -340,6 +347,7 @@ namespace SpiceQL {
     return kset;
   }
 
+
   json searchAndRefineKernels(string mission, vector<double> times, string ckQuality, string spkQuality, vector<string> kernels) {
     auto start = high_resolution_clock::now();
     Config config;
@@ -397,7 +405,8 @@ namespace SpiceQL {
     }
     // Refines times based kernels (cks, spks, and sclks)
     if (timeDepKernelsRequested) {
-      refinedMissionKernels = searchEphemerisKernels(refinedMissionKernels, times, true);
+      json cachedTimes = json::parse(Memo::globTimeIntervals(mission));
+      refinedMissionKernels = searchEphemerisKernels(refinedMissionKernels, times, true, cachedTimes);
 
       if (refinedMissionKernels.contains("ck")) {
         for (int i = (int) ckQualityEnum; (int) ckQualityEnum != 0; i--) {
