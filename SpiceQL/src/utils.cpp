@@ -108,19 +108,23 @@ namespace SpiceQL {
   }
 
 
-  vector<vector<string>> getPathsFromRegex(string root, json r) {
+  vector<vector<string>> getPathsFromRegex(string root, vector<string> regexes) {
+    cout << "root: " << root << endl;
     vector<string> files_to_search = Memo::ls(root, true);
-    vector<string> regexes = jsonArrayToVector(r);
       
     vector<vector<string>> kernels; 
-
+    string temp;
+    vector<string> paths;
+    paths.reserve(files_to_search.size());
+    
     for (auto &regex : regexes) { 
-      SPDLOG_INFO("Searching for kernels matching: {}", regex);
-      vector<string> paths;
-
+      paths.clear();
+      SPDLOG_INFO("Searching for kernels matching {} in {} files", regex, files_to_search.size());
+      
       for (auto &f : files_to_search) {
-        if (regex_search(f.c_str(), basic_regex(regex, regex_constants::optimize|regex_constants::ECMAScript))) {
-          paths.emplace_back(f);
+        temp = fs::path(f).filename();
+        if (regex_search(temp.c_str(), basic_regex(regex, regex_constants::optimize|regex_constants::ECMAScript))) {
+          paths.push_back(f);
         }
       }
 

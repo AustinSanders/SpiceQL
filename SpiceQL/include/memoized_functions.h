@@ -26,6 +26,8 @@ namespace SpiceQL {
   std::vector<std::string> ls(std::string const & root, bool recursive);
 
   
+  std::vector<std::vector<std::string>> getPathsFromRegex (std::string root, std::vector<std::string> regexes);
+
   /**
     * @brief Get start and stop times a kernel.
     *

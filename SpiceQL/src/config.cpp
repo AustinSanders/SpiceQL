@@ -1,5 +1,7 @@
 #include "config.h"
 #include "query.h"
+#include "memoized_functions.h"
+
 #include <time.h>
 
 #include <fstream>
@@ -137,7 +139,7 @@ namespace SpiceQL {
         }
       }
 
-      vector<vector<string>> res = getPathsFromRegex(fsDataPath, eval_json[json_pointer]);
+      vector<vector<string>> res = Memo::getPathsFromRegex(fsDataPath, jsonArrayToVector(eval_json[json_pointer]));
       eval_json[json_pointer] = res;
     }
     copyConfig[pointer] = eval_json;
