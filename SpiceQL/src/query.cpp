@@ -227,6 +227,7 @@ namespace SpiceQL {
 
     json newKernels = json::array();
 
+
     // refine cks for every instrument/category
     for (auto &p : pointers) {
       json cks = kernels[p];
@@ -248,10 +249,10 @@ namespace SpiceQL {
           for (auto &kernel : subArr) {
             json newKernelsSubArr = json::array();
             vector<pair<double, double>> intervals;
-            if(cachedTimes.empty()) {
+            if(cachedTimes.empty() || cachedTimes.is_null()) {
               SPDLOG_TRACE("Getting times");
-              intervals = Memo::getTimeIntervals(kernel);
-            } else { 
+              intervals = Memo::getTimeIntervals(kernel.get<string>());
+            } else {
               SPDLOG_TRACE("Using cached times");
               json arr = cachedTimes[kernel.get<string>()];
               intervals = json2DArrayToDoublePair(arr);
@@ -406,6 +407,7 @@ namespace SpiceQL {
     // Refines times based kernels (cks, spks, and sclks)
     if (timeDepKernelsRequested) {
       json cachedTimes = json::parse(Memo::globTimeIntervals(mission));
+      
       refinedMissionKernels = searchEphemerisKernels(refinedMissionKernels, times, true, cachedTimes);
 
       if (refinedMissionKernels.contains("ck")) {

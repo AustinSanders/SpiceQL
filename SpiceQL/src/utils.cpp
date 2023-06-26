@@ -1,7 +1,7 @@
 /**
- *
- *
- *
+ * 
+ * 
+ * 
  **/
 
 #include <exception>
@@ -805,10 +805,10 @@ namespace SpiceQL {
         
         pair<double, double> subres; 
 
-        if (!subarr.is_array()) { 
+        if (!subarr.is_array()) {
           throw invalid_argument("Input json is not a valid 2D Json array: " + arr.dump());
         }
-        if (subarr.size() != 2) { 
+        if (subarr.size() != 2) {
           throw invalid_argument("Input json is not a valid Nx2 Json array: " + arr.dump());
         }
         if (!(subarr[0].is_number() && subarr[0].is_number())) { 
@@ -819,6 +819,10 @@ namespace SpiceQL {
         subres.second = subarr[1].get<double>();
         res.push_back(subres);
       }
+    }
+    else if (arr.is_null()) { 
+      vector<pair<double, double>> empty; 
+      return empty;   
     }
     else {
       throw invalid_argument("Input json is not a valid 2D Json array: " + arr.dump());
@@ -984,9 +988,10 @@ namespace SpiceQL {
 
   string globTimeIntervals(string mission) { 
     SPDLOG_TRACE("In globTimeIntervals.");
-    Config conf(getMissionConfigFile(mission));
+    Config conf;
+    conf = conf[mission];
     json new_json = {};
-    json sclk_json = conf.getLatestRecursive("sclk");
+    json sclk_json = getLatestKernels(conf.get("sclk"));
     KernelSet sclks(sclk_json);
 
     // Get CK Times
@@ -1014,7 +1019,7 @@ namespace SpiceQL {
           new_json[kernel] = timeIntervals;
         }
       }
-    } 
+    }
     return new_json.dump();
   }
 
@@ -1121,6 +1126,7 @@ namespace SpiceQL {
 
 
   void resolveConfigDependencies(json &config, const json &dependencies) {
+    SPDLOG_TRACE("IN resolveConfigDependencies");
     vector<json::json_pointer> depLists = findKeyInJson(config, "deps");
     
     // 10 seems like a reasonable number of recursive dependencies to allow

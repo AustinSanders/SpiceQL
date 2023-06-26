@@ -1,13 +1,17 @@
+#! /usr/bin/env python 
 # Name: SpiceJsonGenerator
 # Version 1.3
 # Author: Gavin Nelson
 # Project: SpiceQL 
+
 
 import json
 import os
 import fnmatch
 import argparse
 import warnings
+
+from pathlib import Path
 
 ''' 
 kernel class object declaration will be used for storing 
@@ -50,32 +54,31 @@ class kernel:
     def get_most_recent_kernel(self):
         make_db_version_files = []
         kernel_db_files = []  
-        
         # iterate over all files in kernel dir 
-        for file in os.listdir(self.path):
-            # check if the file is a make db file, if so add to list
-            if fnmatch.fnmatch(file, "*makedb*"):
-                make_db_version_files.append(file)
+        if os.path.isdir(self.path):
+            for file in os.listdir(self.path):
+                # check if the file is a make db file, if so add to list
+                if fnmatch.fnmatch(file, "*makedb*"):
+                    make_db_version_files.append(file)
 
-            # check if the file is a kernel db file, if so add to list
-            elif fnmatch.fnmatch(file, "kernels.*.db"):
-                kernel_db_files.append(file)
+                # check if the file is a kernel db file, if so add to list
+                elif fnmatch.fnmatch(file, "kernels.*.db"):
+                    kernel_db_files.append(file)
 
         # check if we have make db files as make db files take priority over kernel db files 
         if make_db_version_files:
             self.is_make_db_file = True
             self.file = max(make_db_version_files)
-            self.path = self.path + f"/{self.file}"
+            self.path = Path(self.path) / self.file
 
         # no make db files found, check for kernel files 
         elif kernel_db_files:
             self.file = max(kernel_db_files)
-            self.path = self.path + f"/{self.file}"
+            self.path = Path(self.path) / self.file
 
         # no make db or kernel files found, throw warning 
         else:
-            warnings.warn(f"\nWarning no makedb or kernel db files \
-                            found for kernel type {self.kernel_type}")
+            warnings.warn(f"\nWarning no makedb or kernel db files found for kernel type {self.kernel_type}")
 
     # main parse kernel call, calls respective function depending on kernel type 
     def parse_kernel(self,input_json):
@@ -149,12 +152,13 @@ class kernel:
                 value = self.format_kernel_file_name(value)
 
             try:
-                # self.append_value(input_json[self.mission_name][self.kernel_type], "kernels", value)
-                self.append_value(input_json[self.mission_name], self.kernel_type)
-            except KeyError:
+                self.append_value(input_json[self.mission_name], self.kernel_type, "kernels")
+                self.append_value(input_json[self.mission_name][self.kernel_type], "kernels", value)
+            except KeyError as e:
+                print(e)
                 input_json[self.mission_name] = {}
                 self.append_value(input_json[self.mission_name], self.kernel_type)
-                # self.append_value(input_json[self.mission_name][self.kernel_type], "kernels", value)
+                self.append_value(input_json[self.mission_name][self.kernel_type], "kernels", value)
 
     def parse_kernel_db_file(self, input_json):
 
@@ -245,10 +249,11 @@ class kernel:
                         else:
                             try:
                                 
-                                self.append_value(input_json[self.mission_name], self.kernel_type,"")
+                                input_json[self.mission_name.lower()][self.kernel_type] = {"kernels": ""}
                             except KeyError:
-                                input_json[self.mission_name] = {self.kernel_type}
-                                self.append_value(input_json[self.mission_name], self.kernel_type,"")
+                                input_json[self.mission_name.lower()] = {self.kernel_type}
+                                input_json[self.mission_name.loser()][self.kernel_type] = {"kernels": ""}
+
                         
 
                 
@@ -295,9 +300,10 @@ class mission:
         self.kernel_list.append(kernel)
     
     def get_kernels(self):
-        for kernel_type in os.listdir(self.path+"/kernels"):
-            new_kernel = kernel(kernel_type, self.path + "/kernels/" + kernel_type, self.name)
-            self.add_kernel_to_list(new_kernel)
+        for kernel_type in os.listdir(Path(self.path) / "kernels"):
+            if not kernel_type.startswith("."):
+                new_kernel = kernel(kernel_type, Path(self.path) / "kernels" / kernel_type, self.name)
+                self.add_kernel_to_list(new_kernel)
     
     # generate mission json 
     def generate_mission_json_config(self):
