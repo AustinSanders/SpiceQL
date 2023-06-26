@@ -25,18 +25,21 @@ namespace SpiceQL {
         config[it.key()] = it.value();
       }
     }
+    resolveConfigDependencies(config, config);
   }
 
 
   Config::Config(string j) {
     std::ifstream ifs(j);
     config = json::parse(ifs);
+    resolveConfigDependencies(config, config);
   }
 
   
   Config::Config(json j, string pointer) {
     config = j;
     confPointer = pointer;
+    resolveConfigDependencies(config, config);
   }
 
 
@@ -89,7 +92,7 @@ namespace SpiceQL {
     }
     json::json_pointer fullPointer = pathMod;
 
-    // If there is some dependency at the pointer requested, return that instead
+  // If there is some dependency at the pointer requested, return that instead
     string depPath = json::json_pointer(getRootDependency(config, fullPointer.to_string()));
     if (depPath != "") {
       return depPath;
@@ -111,7 +114,6 @@ namespace SpiceQL {
     SPDLOG_DEBUG("Data Directory: {}", dataPath);
 
     json eval_json(copyConfig);
-    resolveConfigDependencies(eval_json, config);
     if (!eval_json.contains(pointer)) {
       return {};
       // throw invalid_argument(fmt::format("Pointer {} not in config/subset config", pointer.to_string()));

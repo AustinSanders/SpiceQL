@@ -17,9 +17,9 @@ namespace SpiceQL {
 
 
   string Memo::globTimeIntervals(string mission) { 
-    Cache c({fs::path(getDataDirectory()) / mission});
+    Cache c({fs::path(getDataDirectory())});
     SPDLOG_TRACE("Calling globTimeIntervals via cache");
-    static auto func_memoed = make_memoized(c, "spiceql_getTimeIntervals", SpiceQL::globTimeIntervals);
+    static auto func_memoed = make_memoized(c, "spiceql_globTimeIntervals", SpiceQL::globTimeIntervals);
     return func_memoed(mission);
   }
 

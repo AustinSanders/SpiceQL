@@ -252,7 +252,7 @@ TEST_F(IsisDataDirectory, FunctionalTestLroConf) {
   mocks.OnCallFunc(ls).Return(files);
   
   nlohmann::json res = listMissionKernels("doesn't matter", conf);
-
+  
   // check a kernel from each regex exists in their quality groups
   vector<string> kernelToCheck =  SpiceQL::getKernelsAsVector(res.at("moc").at("ck").at("reconstructed").at("kernels"));
   vector<string> expected = {"moc42r_2016305_2016336_v01.bc"};

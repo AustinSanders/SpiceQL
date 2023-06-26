@@ -16,7 +16,7 @@ using namespace SpiceQL;
 TEST_F(TestConfig, FunctionalTestConfigConstruct) {
   json megaConfig = testConfig.globalConf();
 
-  EXPECT_EQ(megaConfig.size(), 33);
+  EXPECT_EQ(megaConfig.size(), 62);
 }
 
 TEST_F(TestConfig, FunctionalTestConfigEval) {
@@ -148,7 +148,8 @@ TEST_F(TestConfig, FunctionalTestsConfigGetRecursive) {
   mocks.OnCallFunc(ls).Return(paths);
 
   json resJson = testConfig.getRecursive("sclk");
-  EXPECT_EQ(resJson.size(), 16);
+
+  EXPECT_EQ(resJson.size(), 56);
   for (auto &[key, val] : resJson.items()) {
     EXPECT_TRUE(val.contains("sclk"));
   }
@@ -165,6 +166,23 @@ TEST_F(TestConfig, FunctionalTestsSubConfigGetRecursive) {
     EXPECT_EQ(key, "sclk");
   }
 }
+
+
+TEST_F(TestConfig, FunctionalTestsSubConfigGetLatestRecursive) {
+  MockRepository mocks;
+  mocks.OnCallFunc(ls).Return(paths);
+
+  testConfig = testConfig["lroc"];
+  
+  json resJson = testConfig.getLatestRecursive("sclk");
+
+  EXPECT_EQ(resJson.size(), 1);
+  for (auto &[key, val] : resJson.items()) {
+    EXPECT_EQ(key, "sclk");
+    EXPECT_EQ(val["kernels"].at(0).size(), 1);
+  }
+}
+
 
 TEST_F(TestConfig, FunctionalTestsConfigGet) {
   vector<string> expectedPointers = {"/ck/reconstructed", "/fk", "/iak", "/ik", "/pck", "/spk/reconstructed", "/spk/smithed", "/sclk", "/tspk"};
@@ -241,7 +259,7 @@ TEST_F(TestConfig, FunctionalTestsConfigGetParentPointerDeps) {
   std::string pointer = "/lroc/sclk";
 
   std::string parent = testConfig.getParentPointer(pointer, 1);
-  EXPECT_EQ(parent, "/lro");
+  EXPECT_EQ(parent, "/lroc");
 
   parent = testConfig.getParentPointer(pointer, 2);
   EXPECT_EQ(parent, "/lroc/sclk");
