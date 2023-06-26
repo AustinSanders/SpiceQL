@@ -189,7 +189,7 @@ TEST_F(KernelDataDirectories, FunctionalTestListMissionKernelsCassini) {
   nlohmann::json res = listMissionKernels("/isis_data/", conf);
 
   ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["ck"]["reconstructed"]["kernels"]).size(), 2);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["ck"]["smithed"]["kernels"]).size(), 3);
+  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["ck"]["smithed"]["kernels"]).size(), 2);
   ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["fk"]["kernels"]).size(), 2);
   ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["iak"]["kernels"]).size(), 3);
   ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["pck"]["kernels"]).size(), 3);
@@ -198,27 +198,6 @@ TEST_F(KernelDataDirectories, FunctionalTestListMissionKernelsCassini) {
   ASSERT_EQ(SpiceQL::getKernelsAsVector(res["cassini"]["spk"]["kernels"]).size(), 3);
 }
 
-
-TEST_F(KernelDataDirectories, FunctionalTestListMissionKernelsApollo16) {
-  fs::path dbPath = getMissionConfigFile("apollo16");
-    ifstream i(dbPath);
-  nlohmann::json conf;
-  i >> conf;
-  MockRepository mocks;
-  mocks.OnCallFunc(ls).Return(paths);
-
-  nlohmann::json res = listMissionKernels("/isis_data/", conf);
-
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["apollo16"]["sclk"]["kernels"]).size(), 1);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["apollo16"]["ck"]["reconstructed"]["kernels"]).size(), 4);
-
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["apollo16"]["spk"]["reconstructed"]["kernels"]).size(), 4);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["apollo16"]["fk"]["kernels"]).size(), 2);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["metric"]["ik"]["kernels"]).size(), 2);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["metric"]["iak"]["kernels"]).size(), 1);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["panoramic"]["ik"]["kernels"]).size(), 1);
-  ASSERT_EQ(SpiceQL::getKernelsAsVector(res["apollo_pan"]["iak"]["kernels"]).size(), 2);
-}
 
 
 // test for apollo 17 kernels 

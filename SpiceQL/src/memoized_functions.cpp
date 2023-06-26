@@ -24,6 +24,14 @@ namespace SpiceQL {
   }
 
 
+  vector<vector<string>> Memo::getPathsFromRegex (string root, vector<string> regexes) { 
+    Cache c({fs::path(root)});
+    SPDLOG_TRACE("Calling globTimeIntervals via cache");
+    static auto func_memoed = make_memoized(c, "spiceql_getPathsFromRegex", SpiceQL::getPathsFromRegex);
+    return func_memoed(root, regexes); 
+  }
+
+
   vector<string> Memo::ls(string const & root, bool recursive) {
     Cache c({root});
     SPDLOG_TRACE("Calling ls via cache");

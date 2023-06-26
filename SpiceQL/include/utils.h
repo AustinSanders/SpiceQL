@@ -72,7 +72,7 @@ namespace SpiceQL {
     * @param r json list of regexes
     * @returns vector of paths
    **/
-  std::vector<std::vector<std::string>> getPathsFromRegex (std::string root, nlohmann::json r);
+  std::vector<std::vector<std::string>> getPathsFromRegex (std::string root, std::vector<std::string> regexes);
 
 
   /**

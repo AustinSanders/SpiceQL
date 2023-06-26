@@ -301,7 +301,7 @@ TEST(UtilTests, testGetPathsFromRegex) {
 
   nlohmann::json kernels = R"( ["test[0-9]{5}.ti", "test[0-9].spk"] )"_json;
   std::vector<std::vector<std::string>> res; 
-  res = getPathsFromRegex(temp, kernels);
+  res = getPathsFromRegex(temp, jsonArrayToVector(kernels));
 
   // just enforce the shape
   EXPECT_EQ(res.size(), 2); 
@@ -325,7 +325,7 @@ TEST(UtilTests, testGetPathsFromRegexSingleRegex) {
 
   nlohmann::json kernels = R"( ["test[0-9].spk"] )"_json;
   std::vector<std::vector<std::string>> res; 
-  res = getPathsFromRegex(temp, kernels);
+  res = getPathsFromRegex(temp, jsonArrayToVector(kernels));
 
   // just enforce the shape, this should still be "2D"
   EXPECT_EQ(res.size(), 1); 

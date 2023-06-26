@@ -152,7 +152,7 @@ namespace SpiceQL {
       json category = conf[pointer];
 
       if (category.contains("kernels")) {
-        ret[pointer]["kernels"] = getPathsFromRegex(root, category.at("kernels"));
+        ret[pointer]["kernels"] = getPathsFromRegex(root, jsonArrayToVector(category.at("kernels")));
       }
 
       if (category.contains("deps")) {
@@ -173,17 +173,17 @@ namespace SpiceQL {
           continue;
         }
 
-        vector<vector<string>> binKernels = getPathsFromRegex(root, category[qual].at("kernels"));
+        vector<vector<string>> binKernels = getPathsFromRegex(root, jsonArrayToVector(category[qual].at("kernels")));
         if (!binKernels.empty()) {
           ret[pointer][qual]["kernels"] = binKernels;
         } 
 
         if (category[qual].contains("deps")) {
           if (category[qual].at("deps").contains("sclk")) {
-            ret[pointer][qual]["deps"]["sclk"] = getPathsFromRegex(root, category[qual].at("deps").at("sclk"));
+            ret[pointer][qual]["deps"]["sclk"] = getPathsFromRegex(root, jsonArrayToVector(category[qual].at("deps").at("sclk")));
           }
           if (category[qual].at("deps").contains("pck")) {
-            ret[pointer][qual]["deps"]["pck"] = getPathsFromRegex(root, category[qual].at("deps").at("pck"));
+            ret[pointer][qual]["deps"]["pck"] = getPathsFromRegex(root, jsonArrayToVector(category[qual].at("deps").at("pck")));
           }
           if (category[qual].at("deps").contains("objs")) {
             ret[pointer][qual]["deps"]["objs"] = category[qual].at("deps").at("objs");

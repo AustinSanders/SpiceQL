@@ -376,13 +376,27 @@ namespace Memo {
 }
 }
 
-namespace std {
-  // literally have no idea why I need to make this specialization... can't compile otherwise
-  template <> struct hash<std::vector<std::string >(const std::string&, bool)> {
-    size_t operator()(const auto & x) const {
-      return 0;
+// namespace std {
+//   // literally have no idea why I need to make this specialization... can't compile otherwise
+//   template <> struct hash<std::vector<std::string >(const std::string&, bool)> {
+//     size_t operator()(const auto & x) const {
+//       return 0;
+//     }
+//   };
+// }
+
+template<>
+struct std::hash<std::vector<std::string>>
+{
+    std::size_t operator()(vector<string> const& vec) const noexcept {
+        std::size_t seed = 0;  
+        std::hash<std::string> hasher;
+
+        for(auto &e : vec) { 
+           seed = SpiceQL::Memo::hash_combine(seed, hasher(e)); 
+        }
+        return seed;
     }
-  };
-}
+};
 
 #endif
