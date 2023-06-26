@@ -115,7 +115,7 @@ namespace SpiceQL {
     vector<vector<string>> kernels; 
 
     for (auto &regex : regexes) { 
-      SPDLOG_DEBUG("Searching for kernels matching: {}", regex);
+      SPDLOG_INFO("Searching for kernels matching: {}", regex);
       vector<string> paths;
 
       for (auto &f : files_to_search) {
@@ -212,7 +212,7 @@ namespace SpiceQL {
     KernelSet ephemSet(ephemKernels);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    SPDLOG_DEBUG("Time in microseconds to furnish kernel sets: {}", duration.count());
+    SPDLOG_INFO("Time in microseconds to furnish kernel sets: {}", duration.count());
     
     start = high_resolution_clock::now();
     vector<vector<double>> lt_stargs;
@@ -224,7 +224,7 @@ namespace SpiceQL {
 
     stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(stop - start);
-    SPDLOG_DEBUG("Time in microseconds to get data results: {}", duration.count());
+    SPDLOG_INFO("Time in microseconds to get data results: {}", duration.count());
  
     return lt_stargs;
   }
@@ -452,7 +452,7 @@ namespace SpiceQL {
     KernelSet ephemSet(ephemKernels);
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
-    SPDLOG_DEBUG("Time in microseconds to furnish kernel sets: {}", duration.count());
+    SPDLOG_INFO("Time in microseconds to furnish kernel sets: {}", duration.count());
 
     start = high_resolution_clock::now();
     vector<vector<double>> orientations = {};
@@ -463,7 +463,7 @@ namespace SpiceQL {
     }
     stop = high_resolution_clock::now();
     duration = duration_cast<microseconds>(stop - start);
-    SPDLOG_DEBUG("Time in microseconds to get data results: {}", duration.count());
+    SPDLOG_INFO("Time in microseconds to get data results: {}", duration.count());
 
     return orientations;
   }
