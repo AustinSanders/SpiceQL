@@ -446,7 +446,7 @@ namespace SpiceQL {
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<microseconds>(stop - start);
 
-    SPDLOG_DEBUG("Time in microseconds to get filtered kernel list: {}", duration.count());
+    SPDLOG_INFO("Time in microseconds to get filtered kernel list: {}", duration.count());
     return finalKernels;
   }
 }
