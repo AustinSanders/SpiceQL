@@ -163,9 +163,4 @@ update-image:
           aws lambda update-function-code --region $REGION --function-name $func --image-uri $IMAGEURI
         done
   rules:
-    - if: "$CI_COMMIT_BRANCH == 'main'"
-      changes:
-      - .gitlab-ci.yml
-      - SpiceQL/*
-      - aws/*
-      
+    - if: '$CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_REF_NAME == "main"'
