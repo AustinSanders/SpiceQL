@@ -168,3 +168,4 @@ update-image:
       - .gitlab-ci.yml
       - SpiceQL/*
       - aws/*
+      
