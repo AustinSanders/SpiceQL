@@ -46,6 +46,7 @@ namespace std {
   %template(VectorDoubleVector) vector< vector<double> >;
   %template(VectorIntVector) vector< vector<int> >;
   %template(StringVector) vector<string>;
+  %template(VectorStringVector) vector< vector<string> >;
   %template(ConstCharVector) vector<const char*>;
   %template(PairDoubleVector) vector<pair<double, double>>;
   %template(DoubleArray6) array<double, 6>;
