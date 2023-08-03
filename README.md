@@ -106,7 +106,11 @@ assert(result1 == result2);
 
 ## Interacting with Public(VPN) AWS Lambda Function
 
-See [openapi.yml](https://code.chs.usgs.gov/asc/SpiceQL/-/blob/main/aws/openapi.yml) for documentation on querying the API.
+### Production API
+See [openapi-prod.yml](https://code.chs.usgs.gov/asc/SpiceQL/-/blob/main/aws/openapi-prod.yml) for documentation on querying the API.
+
+### Dev API
+See [openapi-prod.yml](https://code.chs.usgs.gov/asc/SpiceQL/-/blob/main/aws/openapi.yml) for documentation on querying the API.
 
 
 ## Devs Adding new Endpoints to API
@@ -130,6 +134,56 @@ To expose a new function as an endpoint to the API:
 5. Add lambda function name to "functions" list in the [gilab-ci.yml](https://code.chs.usgs.gov/asc/SpiceQL/-/blob/main/.gitlab-ci.yml#L159).
 
 6. Once these updated files are merged into the main branch, The CI will automatically update the Cloudformation and API Gateway to include the new endpoints. 
+
+
+## Deploy to Production
+
+1. Create a repo release and tick the version number according to [semver.org](https://semver.org). 
+
+2. Deploy new image to ECR
+
+   `aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 950438895271.dkr.ecr.us-west-2.amazonaws.com`
+
+   `git submodule update --init --recursive`
+
+   `docker build -t spiceql .`
+
+   `docker tag spiceql:latest 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:<new-version-tick>`
+
+   `docker push 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:<new-version-tick>`
+
+3. Update the StageName, Stage, and ApiMappingKey in [SpiceQlMainStack-Prod.yml](https://code.chs.usgs.gov/asc/SpiceQL/-/blob/main/aws/SpiceQlMainStack-Prod.yml) to `v<new-version-tick(no dots)>`. Make sure to only enter the numbers. API Gateway cannot handle symbols in the versioning.
+
+4. Update the version and URL in [openapi-prod.yml](https://code.chs.usgs.gov/asc/SpiceQL/-/blob/main/aws/openapi-prod.yml) with new version tick.
+
+5. If any lambda functions are added to `SpiceQLambdaStack.yaml` or `openapi.yaml` in the new release, copy and paste them into `SpiceQLambdaStack-Prod.yaml` and `openapi-prod.yaml`. Update the images to the new version tick for each lambda function. If new functions are added to `SpiceQlamdbdaStack-Prod.yaml`, make sure to add "-prod" after the existing function name (e.g. strSclkToEtlambda -> strSclkToEtlambda-prod).
+
+6. Once all changes have been made, submit a merge request.
+
+7. Update API in AWS
+
+   `aws s3 cp aws/openapi-prod.yml s3://spiceql-openapi-files`
+
+   `aws apigateway put-rest-api --rest-api-id	roiq1c4q37 --region us-west-2 --mode overwrite --body 'fileb://aws/openapi-prod.yml'`
+
+   `aws apigateway create-deployment --rest-api-id roiq1c4q37 --region us-west-2 --stage-name v<new-version-tick(no dots)>`
+
+8.  Update Cloudformation Stacks
+    
+    `aws s3 cp aws/SpiceQLambdaStac-Prod.yml s3://cf-templates-1bxumkby1rqpi-us-west-2/spiceql-cf-templates/`
+
+    `aws s3 cp aws/SpiceQlMainStack-Prod.yml s3://cf-templates-1bxumkby1rqpi-us-west-2/spiceql-cf-templates/`
+
+    `aws cloudformation update-stack --region us-west-2 --stack-name spiceql-prod --template-url https://s3.amazonaws.com/cf-templates-1bxumkby1rqpi-us-west-2/spiceql-cf-templates/SpiceQlMainStack-Prod.yml`
+
+9. Update Lambda Function Images
+
+   For each lambda function run:
+   `aws lambda update-function-code --region us-west-2 --function-name <function-name> --image-uri 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:<new-version-tick(with dots)>`
+
+
+
+
 
 
 

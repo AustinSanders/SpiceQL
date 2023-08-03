@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: SpiceQL Prod Lambda Deploy
+Resources:
+
+  #EFS Access Point
+  AccessPointResource:
+    Type: AWS::EFS::AccessPoint
+    Properties:
+      FileSystemId: fs-0dafe0512ba2eaa98
+      PosixUser:
+        Uid: '1000'
+        Gid: '1000'
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: '1000'
+          OwnerUid: '1000'
+          Permissions: '755'
+        Path: '/'
+
+  # API Gateway
+  SpiceQlRestfulApi: 
+    Type: AWS::ApiGateway::RestApi
+    Properties: 
+      Name: "SpiceQlAPI-Prod"
+      EndpointConfiguration: 
+        Types:
+            - REGIONAL
+      BodyS3Location:
+        Bucket: spiceql-openapi-files
+        Key: openapi-prod.yml
+  SpiceQlRestApiDeployment: 
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: 
+      - SpiceQlRestfulApi 
+    Properties: 
+      RestApiId: !Ref SpiceQlRestfulApi
+      StageName: v030
+
+  # EC2 Security Group
+  SpiceQlSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: "Sg for SpiceQlLambda"
+      GroupName: SpiceQlSecurityGroupProd
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 442
+          ToPort: 2050
+          CidrIp: 0.0.0.0/0 
+        - IpProtocol: tcp 
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: 0.0.0.0/0 
+      SecurityGroupIngress: 
+        - IpProtocol: tcp 
+          FromPort: 442
+          ToPort: 2050
+          CidrIp: 0.0.0.0/0 
+        - IpProtocol: tcp 
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: 0.0.0.0/0 
+      VpcId: vpc-004f1e36134bcaa04
+
+  #Domain
+  SpiceQlDomainName:
+      Type: AWS::ApiGateway::DomainName
+      Properties: 
+          RegionalCertificateArn: arn:aws:acm:us-west-2:950438895271:certificate/6aa50410-fb5a-4300-888f-55aae14463df
+          DomainName: spiceql-deployment.prod-asc.chs.usgs.gov
+          EndpointConfiguration:
+            Types:
+            - REGIONAL
+  SpiceQlRoute53:
+      Type: AWS::Route53::RecordSet
+      Properties: 
+        HostedZoneName: prod-asc.chs.usgs.gov.
+        AliasTarget: 
+            DNSName: !GetAtt SpiceQlDomainName.RegionalDomainName
+            HostedZoneId: !GetAtt SpiceQlDomainName.RegionalHostedZoneId
+        Name: spiceql-deployment.prod-asc.chs.usgs.gov
+        Type: A
+  SpiceQlApiMapping:
+      Type: AWS::ApiGatewayV2::ApiMapping
+      Properties: 
+        DomainName: !Ref SpiceQlDomainName
+        ApiId: !Ref SpiceQlRestfulApi
+        ApiMappingKey: 'v030'
+        Stage: v030
+
+  # Lambdas  
+  LambdaStack:
+        Type: AWS::CloudFormation::Stack
+        DependsOn:
+            - SpiceQlSG
+            - SpiceQlRestfulApi
+            - AccessPointResource
+            - SpiceQlReplicationGroup
+        Properties:
+            Parameters:
+                SpiceQlSgId: !Ref SpiceQlSG
+                SpiceQlRestfulApiId: !Ref SpiceQlRestfulApi
+                AccessPointResourceArn: !GetAtt AccessPointResource.Arn
+                SpiceQlRedisEndpoint: !GetAtt SpiceQlReplicationGroup.ConfigurationEndPoint.Address
+            TemplateURL: https://s3.amazonaws.com/cf-templates-1bxumkby1rqpi-us-west-2/spiceql-cf-templates/SpiceQLambdaStack-Prod.yml
+
+  # ElastiCache
+  ElastiCacheSubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: ElastiCacheSubnetGroup
+      SubnetIds:
+        - subnet-0326c18b7c38caa73
+  SpiceQlReplicationGroup:
+    Type: 'AWS::ElastiCache::ReplicationGroup'
+    Properties:
+      CacheNodeType: cache.t3.medium
+      CacheParameterGroupName: default.redis7.cluster.on
+      ReplicationGroupId: "spiceqlelasticacheclusterprod"
+      ReplicationGroupDescription: "SpiceQL Redis Cluster"
+      Engine: redis
+      NumCacheClusters: 2
+      AutomaticFailoverEnabled: 'true'
+      SecurityGroupIds: 
+        - !GetAtt 
+          - SpiceQlSG
+          - GroupId
+      CacheSubnetGroupName: !Ref ElastiCacheSubnetGroup

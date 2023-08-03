@@ -15,7 +15,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: strSclkToEtlambda
+      FunctionName: strSclkToEtlambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -23,7 +23,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_strSclkToEt"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -49,7 +49,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: doubleSclkToEtlambda
+      FunctionName: doubleSclkToEtlambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -57,7 +57,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_doubleSclkToEt"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -83,7 +83,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: utcToEtlambda
+      FunctionName: utcToEtlambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -91,7 +91,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_utcToEt"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -117,7 +117,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: translateNameToCodelambda
+      FunctionName: translateNameToCodelambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -125,7 +125,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_translateNameToCode"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -151,7 +151,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: translateCodeToNamelambda
+      FunctionName: translateCodeToNamelambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -159,7 +159,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_translateCodeToName"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -186,7 +186,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: getTargetStateslambda
+      FunctionName: getTargetStateslambda-prod
       PackageType: Image
       MemorySize: 2000
       FileSystemConfigs: 
@@ -195,7 +195,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_getTargetStates"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -221,7 +221,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: getTargetOrientationslambda
+      FunctionName: getTargetOrientationslambda-prod
       PackageType: Image
       MemorySize: 2000
       FileSystemConfigs: 
@@ -230,7 +230,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_getTargetOrientations"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -256,7 +256,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: frameTracelambda
+      FunctionName: frameTracelambda-prod
       PackageType: Image
       MemorySize: 2000
       FileSystemConfigs: 
@@ -265,7 +265,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_frameTrace"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -291,7 +291,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: findMissionKeywordslambda
+      FunctionName: findMissionKeywordslambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -299,7 +299,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_findMissionKeywords"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -326,7 +326,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: findTargetKeywordslambda
+      FunctionName: findTargetKeywordslambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -334,7 +334,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_findTargetKeywords"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -361,7 +361,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: getFrameInfolambda
+      FunctionName: getFrameInfolambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -369,7 +369,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_getFrameInfo"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
@@ -396,7 +396,7 @@ Resources:
     Properties:
       Timeout: 300 
       Role: arn:aws:iam::950438895271:role/csr-Lambda-Role
-      FunctionName: getTargetFrameInfolambda
+      FunctionName: getTargetFrameInfolambda-prod
       PackageType: Image
       FileSystemConfigs: 
         - Arn: !Ref AccessPointResourceArn
@@ -404,7 +404,7 @@ Resources:
       ImageConfig:
         Command: ["lambda_function.lambda_getTargetFrameInfo"]
       Code:
-        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:latest
+        ImageUri: 950438895271.dkr.ecr.us-west-2.amazonaws.com/spiceql:0.3.0
       VpcConfig:
         SecurityGroupIds: 
           - !Ref SpiceQlSgId 
