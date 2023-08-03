@@ -1,9 +1,9 @@
 openapi: '3.0.2'
 info:
   title: SpiceQL
-  version: '1.0.0'
+  version: '0.3.0'
 servers:
-  - url: https://spiceql-dev.prod-asc.chs.usgs.gov/v1
+  - url: https://spiceql-deployment.prod-asc.chs.usgs.gov/v030
 paths:
   /strSclkToEt:
     get:   
@@ -37,7 +37,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:strSclkToEtlambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:strSclkToEtlambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"frameCode\": $input.params('frameCode'), \"mission\": \"$input.params('mission')\", \"sclk\": \"$input.params('sclk')\" }"
         requestParameters : {
@@ -49,7 +49,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-                "application/json": "$input.body"   
+                "application/json": "'$input.body'"   
   /doubleSclkToEt:
     get:   
       summary: "Converts a given double spacecraft clock time to an ephemeris time"
@@ -83,7 +83,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:doubleSclkToEtlambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:doubleSclkToEtlambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"frameCode\": $input.params('frameCode'), \"mission\": \"$input.params('mission')\", \"sclk\": $input.params('sclk') }"
         requestParameters : {
@@ -95,7 +95,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-                "application/json": "$input.body"  
+                "application/json": "'$input.body'"  
   /utcToEt:
     get:    
       summary: "Returns list of missions that are currently supported"
@@ -115,7 +115,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:utcToEtlambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:utcToEtlambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"utc\": \"$input.params('utc')\"}"
         requestParameters : {
@@ -125,7 +125,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
   /translateNameToCode:
     get:
       description: "Switch between NAIF frame string name to integer frame code"
@@ -150,7 +150,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:translateNameToCodelambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:translateNameToCodelambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"frame\": \"$input.params('frame')\", \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
@@ -161,7 +161,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
   /translateCodeToName:
     get:
       description: "Switch between NAIF frame integer code to string frame name"
@@ -186,7 +186,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:translateCodeToNamelambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:translateCodeToNamelambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"frame\": $input.params('frameCode'), \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
@@ -197,7 +197,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
   /getTargetStates:
     get:
       description: 'Get states of target relative to observer for each provided time'
@@ -207,53 +207,47 @@ paths:
         description: "All ephemeris times to get states for"
         required: true
         schema:
-          anyOf:
-            - type: array
-              items:
-                type: number
-                format: "double"
+          type: "array"
+          items:
+            type: "number"
+            format: "double"
       - name: "target"
         in: "query"
         description: "Target to get the state of"
         required: true
         schema:
           type: "string"
-        example: "mro"
       - name: "observer"
         in: "query"
         description: "Observing body that the target state will be relative to"
         required: true
         schema:
           type: "string"
-        example: "MARS"
       - name: "frame"
         in: "query"
         description: "Output reference frame to be used"
         required: true
         schema:
           type: "string"
-        example: "J2000"
       - name: "abcorr"
         in: "query"
         description: "Aboration correction"
         required: true
         schema:
           type: "string"
-        example: "LT+S"
       - name: "mission"
         in: "query"
         description: "Mission name as it relates to the config files"
         required: true
         schema:
           type: "string"
-        example: "mro"
       responses:
         '200':
           description: OK
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getTargetStateslambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getTargetStateslambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"ets\": $input.params('ets'), \"target\":\"$input.params('target')\", \"observer\":\"$input.params('observer')\", \"frame\":\"$input.params('frame')\", \"abcorr\":\"$input.params('abcorr')\", \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
@@ -268,70 +262,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
-  /getTargetOrientations:
-    get:
-      description: 'Get orientations of toFrame relative to reFrame for each provided time'
-      parameters: 
-      - name: "ets"
-        in: "query"
-        description: "All ephemeris times to get orientations for"
-        required: true
-        schema:
-          anyOf:
-            - type: array
-              items:
-                type: number
-                format: "double"
-      - name: "toFrame"
-        in: "query"
-        description: "CK frame to translate to"
-        required: true
-        schema:
-          type: "integer"
-        example: "0"
-      - name: "refFrame"
-        in: "query"
-        description: "CK frame to translate from"
-        required: true
-        schema:
-          type: "integer"
-        example: "-85620"
-      - name: "mission"
-        in: "query"
-        description: "Mission name as it relates to the config files"
-        required: true
-        schema:
-          type: "string"
-        example: "mro"
-      - name: "ckQuality"
-        in: "query"
-        description: "Quality of kernel to get for the CK kernels"
-        required: false
-        schema:
-          type: "string"
-        example: "reconstructed"
-      responses:
-        '200':
-          description: OK
-      x-amazon-apigateway-integration:
-        type: aws
-        httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getTargetOrientationslambda/invocations"
-        requestTemplates : 
-          "application/json": "{\"ets\": $input.params('ets'), \"toFrame\": $input.params('toFrame'), \"refFrame\": $input.params('refFrame'), \"mission\":\"$input.params('mission')\", \"ckQuality\":\"$input.params('ckQuality')\"}"
-        requestParameters : {
-          integration.request.querystring.ets: method.request.querystring.ets,
-          integration.request.querystring.target: method.request.querystring.toFrame,
-          integration.request.querystring.observer: method.request.querystring.refFrame,
-          integration.request.querystring.abcorr: method.request.querystring.mission,
-          integration.request.querystring.mission: method.request.querystring.ckQuality
-        }
-        responses:
-          default:
-            statusCode: '200'
-            responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
   /findMissionKeywords:
     get:
       description: 'Takes in a kernel key and returns the value associated with the inputted mission as a json'
@@ -356,7 +287,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:findMissionKeywordslambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:findMissionKeywordslambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"key\": \"$input.params('key')\", \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
@@ -367,35 +298,43 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
-  /findTargetKeywords:
+              "application/json": "'$input.body'"
+  /getTargetValues:
     get:
       description: 'Takes in an a Target key and returns the values associated as a vector.'
       parameters: 
+      - name: "target"
+        in: "query"
+        description: "Target to get values of"
+        required: true
+        schema:
+          type: "string"
+        example: "Earth"
       - name: "key"
         in: "query"
         description: "Keyword for desired values"
         required: true
         schema:
           type: "string"
-        example: "*499*"
+        example: "RADII"
       - name: "mission"
         in: "query"
         description: "Mission name as it relates to the config files"
         required: false
         schema:
           type: "string"
-        example: "mro"
+        example: "kaguya"
       responses:
         '200':
           description: OK
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:findTargetKeywordslambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getTargetValueslambda-prod/invocations"
         requestTemplates : 
-          "application/json": "{\"key\":\"$input.params('key')\", \"mission\":\"$input.params('mission')\"}"
+          "application/json": "{\"target\":\"$input.params('target')\", \"key\":\"$input.params('key')\", \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
+          integration.request.querystring.target: method.request.querystring.target,
           integration.request.querystring.key: method.request.querystring.key,
           integration.request.querystring.mission: method.request.querystring.mission
         }
@@ -403,7 +342,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
   /getFrameInfo:
     get:
       description: ''
@@ -428,7 +367,7 @@ paths:
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getFrameInfolambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getFrameInfolambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"frame\": $input.params('frameCode'), \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
@@ -439,7 +378,7 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
   /getTargetFrameInfo:
     get:
       description: 'Takes in a target id and returns the frame name and frame code in json format.'
@@ -458,13 +397,10 @@ paths:
         schema:
           type: "string"
         example: "mro"
-      responses:
-        '200':
-          description: OK
       x-amazon-apigateway-integration:
         type: aws
         httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getTargetFrameInfolambda/invocations"
+        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:getTargetFrameInfolambda-prod/invocations"
         requestTemplates : 
           "application/json": "{\"targetId\": $input.params('targetId'), \"mission\":\"$input.params('mission')\"}"
         requestParameters : {
@@ -475,57 +411,5 @@ paths:
           default:
             statusCode: '200'
             responseTemplates: 
-              "application/json": "$input.body"
-  /frameTrace:
-    get:
-      description: 'Get all frames between initialFrame and J2000 (0)'
-      parameters: 
-      - name: "et"
-        in: "query"
-        description: "Ephemeris times to trace frames across"
-        required: true
-        schema:
-          format: "double"
-          type: "number"
-        example: "1281792313.1234284"
-      - name: "initialFrame"
-        in: "query"
-        description: "Starting frame to trace back to J2000 (0)"
-        required: true
-        schema:
-          type: "integer"
-        example: "-85620"
-      - name: "mission"
-        in: "query"
-        description: "Mission name as it relates to the config files"
-        required: true
-        schema:
-          type: "string"
-        example: "mro"
-      - name: "ckQuality"
-        in: "query"
-        description: "Quality of kernel to get for the CK kernels"
-        required: false
-        schema:
-          type: "string"
-        example: "reconstructed"
-      responses:
-        '200':
-          description: OK
-      x-amazon-apigateway-integration:
-        type: aws
-        httpMethod: POST
-        uri : "arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:950438895271:function:frameTracelambda/invocations"
-        requestTemplates : 
-          "application/json": "{\"et\": $input.params('et'), \"initialFrame\": $input.params('initialFrame'), \"mission\":\"$input.params('mission')\", \"ckQuality\":\"$input.params('ckQuality')\"}"
-        requestParameters : {
-          integration.request.querystring.et: method.request.querystring.et,
-          integration.request.querystring.target: method.request.querystring.initialFrame,
-          integration.request.querystring.observer: method.request.querystring.mission,
-          integration.request.querystring.frame: method.request.querystring.ckQuality
-        }
-        responses:
-          default:
-            statusCode: '200'
-            responseTemplates: 
-              "application/json": "$input.body"
+              "application/json": "'$input.body'"
+
